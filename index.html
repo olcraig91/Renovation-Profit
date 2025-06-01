@@ -193,7 +193,7 @@
                     <input type="number" id="monthlyRent" placeholder="e.g., 1500" step="any">
                 </div>
             </div>
-            <button onclick="calculateAndDisplay()">Calculate & Generate Full Schedule</button>
+            <button type="button" onclick="calculateAndDisplay()">Calculate & Generate Full Schedule</button>
             <p id="errorMessage" class="error" style="display: none;"></p>
         </div>
 
@@ -217,7 +217,7 @@
                     <input type="number" id="specificMonth" placeholder="e.g., 12" min="1">
                 </div>
             </div>
-            <button onclick="displaySingleMonthDetails()" class="secondary">Show Month Details</button>
+            <button type="button" onclick="displaySingleMonthDetails()" class="secondary">Show Month Details</button>
             <div id="singleMonthResultDisplay">
                 <table id="singleMonthTable" style="display: none;">
                     <thead>
@@ -232,7 +232,10 @@
         </div>
 
         <div class="amortization-section" id="amortizationSection" style="display: none;">
-            <h3>Full Amortization & Profit Schedule</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                 <h3 style="margin-bottom: 0;">Full Amortization & Profit Schedule</h3>
+                 <button type="button" onclick="exportScheduleToCSV()" id="exportCsvButton" class="secondary" style="margin-top:0; width: auto;">Export to CSV</button>
+            </div>
             <table id="amortizationTable">
                 <thead>
                     <tr>
@@ -246,6 +249,7 @@
 
     <script>
         let loanChart = null; // Global variable to hold the chart instance
+        let fullAmortizationData = []; // To store data for CSV export
 
         function formatCurrency(amount) {
             return `$${amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
@@ -266,7 +270,7 @@
 
         function getValidatedInputs() {
             const purchasePrice = parseFloat(document.getElementById('purchasePrice').value);
-            const downPayment = parseFloat(document.getElementById('downPayment').value);
+            const downPayment = parseFloat(document.getElementById('downPayment').value); // Default is 0
             const loanAmount = parseFloat(document.getElementById('loanAmount').value);
             const annualInterestRate = parseFloat(document.getElementById('interestRate').value);
             const loanTermMonths = parseInt(document.getElementById('loanTermMonths').value, 10);
@@ -283,7 +287,7 @@
                 errorMessageEl.style.display = 'block';
                 return null;
             }
-            if (loanTermMonths > 1200) {
+            if (loanTermMonths > 1200) { // Max 100 years
                 errorMessageEl.textContent = 'Loan term is too long (max 1200 months).';
                 errorMessageEl.style.display = 'block';
                 return null;
@@ -299,6 +303,8 @@
             if (!inputs) return;
 
             const { purchasePrice, downPayment, loanAmount, annualInterestRate, loanTermMonths, monthlyRent } = inputs;
+            
+            fullAmortizationData = []; // Reset data for CSV export
 
             const summarySection = document.getElementById('summarySection');
             const graphSection = document.getElementById('graphSection');
@@ -322,11 +328,7 @@
             amortizationTableBody.innerHTML = '';
 
             // --- Calculations ---
-            // User's cost for the house after their down payment
             const costToCoverByLoanOrOther = purchasePrice + downPayment;
-
-            // Upfront cash is the loan amount MINUS what's needed to pay for the house (after down payment)
-            // This is the money "left over" or "shortfall" immediately after transaction.
             const upfrontCash = loanAmount - costToCoverByLoanOrOther;
             
             const monthlyLoanPayment = calculateMonthlyPayment(loanAmount, annualInterestRate, loanTermMonths);
@@ -352,26 +354,30 @@
             summarySection.style.display = 'block';
 
             // --- Data for Amortization & Graph ---
-            let remainingBalance = loanAmount;
-            // CORRECTED: Cumulative profit STARTS with the correctly calculated upfrontCash.
+            let remainingBalance = loanAmount; 
             let cumulativeProfit = upfrontCash;
 
-            const chartLabels = [0]; // Month 0 for initial state
-            const chartProfitData = [cumulativeProfit]; // Start profit with the correct upfrontCash
-            const chartBalanceData = [loanAmount];
+            const chartLabels = [0]; 
+            const chartProfitData = [cumulativeProfit]; 
+            const chartBalanceData = [remainingBalance]; 
 
-            // Initial Row for Amortization Table (Month 0 / Start)
             let initialRow = amortizationTableBody.insertRow();
             initialRow.insertCell().textContent = "Start";
-            initialRow.insertCell().textContent = "-"; // Rent
-            initialRow.insertCell().textContent = "-"; // Payment
-            initialRow.insertCell().textContent = "-"; // Principal
-            initialRow.insertCell().textContent = "-"; // Interest
-            initialRow.insertCell().textContent = "-"; // Monthly Cash Flow
-            initialRow.insertCell().textContent = formatCurrency(remainingBalance); // Loan Balance
-            initialRow.insertCell().textContent = formatCurrency(cumulativeProfit); // Cumulative Profit
+            initialRow.insertCell().textContent = "-"; 
+            initialRow.insertCell().textContent = "-"; 
+            initialRow.insertCell().textContent = "-"; 
+            initialRow.insertCell().textContent = "-"; 
+            initialRow.insertCell().textContent = "-"; 
+            initialRow.insertCell().textContent = formatCurrency(remainingBalance); 
+            initialRow.insertCell().textContent = formatCurrency(cumulativeProfit); 
             initialRow.style.fontWeight = 'bold';
             initialRow.style.backgroundColor = '#e9ecef';
+
+            fullAmortizationData.push({
+                month: "Start", rentIncome: "-", loanPayment: "-", principalPaid: "-",
+                interestPaid: "-", monthlyCashFlow: "-", loanBalance: remainingBalance, 
+                cumulativeProfit: cumulativeProfit 
+            });
 
             for (let month = 1; month <= loanTermMonths; month++) {
                 const interestForMonth = remainingBalance * (annualInterestRate / 100 / 12);
@@ -379,12 +385,10 @@
                 let actualPaymentThisMonth = monthlyLoanPayment;
 
                 if (remainingBalance <= 0.005) { 
-                    principalForMonth = 0;
-                    interestForMonth = 0; 
-                    actualPaymentThisMonth = 0; 
+                    principalForMonth = 0; interestForMonth = 0; actualPaymentThisMonth = 0; 
                     if(remainingBalance < 0) remainingBalance = 0; 
-                } else if (principalForMonth > remainingBalance || month === loanTermMonths) {
-                    principalForMonth = remainingBalance;
+                } else if (principalForMonth > remainingBalance || month === loanTermMonths) { 
+                    principalForMonth = remainingBalance; 
                     actualPaymentThisMonth = interestForMonth + principalForMonth;
                 }
                 
@@ -406,24 +410,26 @@
                 row.insertCell().textContent = formatCurrency(cumulativeProfit);
                 row.cells[7].style.color = cumulativeProfit >= 0 ? 'green' : 'red';
 
+                fullAmortizationData.push({
+                    month: month, rentIncome: monthlyRent, loanPayment: actualPaymentThisMonth,
+                    principalPaid: principalForMonth, interestPaid: interestForMonth,
+                    monthlyCashFlow: cashFlowThisMonth, loanBalance: remainingBalance,
+                    cumulativeProfit: cumulativeProfit
+                });
+                
                 chartLabels.push(month);
                 chartProfitData.push(cumulativeProfit);
                 chartBalanceData.push(remainingBalance);
 
                 if (remainingBalance <= 0 && principalForMonth > 0 && month < loanTermMonths) { 
-                     // Pad remaining months for chart if paid off early
                     for (let m_pad = month + 1; m_pad <= loanTermMonths; m_pad++) {
-                        chartLabels.push(m_pad);
-                        chartProfitData.push(cumulativeProfit); // Profit stays same
-                        chartBalanceData.push(0); // Balance stays 0
+                        chartLabels.push(m_pad); chartProfitData.push(cumulativeProfit); 
+                        chartBalanceData.push(0); 
                     }
                     break; 
                 }
             }
             
-            // If loop completes and loanTermMonths is reached, but loan isn't exactly 0 (should be by now)
-            // The last chart points are already added.
-
             amortizationSection.style.display = 'block';
             singleMonthQuerySection.style.display = 'block';
             document.getElementById('specificMonth').max = loanTermMonths;
@@ -434,93 +440,28 @@
 
         function renderLoanChart(labels, profitData, balanceData) {
             const ctx = document.getElementById('loanChartCanvas').getContext('2d');
-            
-            if (loanChart) {
-                loanChart.destroy(); 
-            }
-
+            if (loanChart) { loanChart.destroy(); }
             loanChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: labels,
                     datasets: [
-                        {
-                            label: 'Cumulative Profit',
-                            data: profitData,
-                            borderColor: 'rgb(75, 192, 192)',
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            tension: 0.1,
-                            yAxisID: 'yProfit' 
-                        },
-                        {
-                            label: 'Loan Principal Balance',
-                            data: balanceData,
-                            borderColor: 'rgb(255, 99, 132)',
-                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                            tension: 0.1,
-                            yAxisID: 'yBalance' 
-                        }
+                        { label: 'Cumulative Profit', data: profitData, borderColor: 'rgb(75, 192, 192)', backgroundColor: 'rgba(75, 192, 192, 0.2)', tension: 0.1, yAxisID: 'yProfit' },
+                        { label: 'Loan Principal Balance', data: balanceData, borderColor: 'rgb(255, 99, 132)', backgroundColor: 'rgba(255, 99, 132, 0.2)', tension: 0.1, yAxisID: 'yBalance' }
                     ]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false, 
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
+                    responsive: true, maintainAspectRatio: false, 
+                    interaction: { mode: 'index', intersect: false, },
                     scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Month'
-                            }
-                        },
-                        yProfit: { 
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: {
-                                display: true,
-                                text: 'Cumulative Profit ($)'
-                            },
-                            grid: {
-                                drawOnChartArea: false, 
-                            },
-                        },
-                        yBalance: { 
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            title: {
-                                display: true,
-                                text: 'Loan Balance ($)'
-                            },
-                            grid: { 
-                                drawOnChartArea: true, 
-                            }
-                        }
+                        x: { title: { display: true, text: 'Month' } },
+                        yProfit: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Cumulative Profit ($)' }, grid: { drawOnChartArea: false, }, },
+                        yBalance: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Loan Balance ($)' }, grid: { drawOnChartArea: true, } }
                     },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
-                                    if (context.parsed.y !== null) {
-                                        label += formatCurrency(context.parsed.y);
-                                    }
-                                    return label;
-                                }
-                            }
-                        }
-                    }
+                    plugins: { tooltip: { callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); } return label; } } } }
                 }
             });
         }
-
 
         function displaySingleMonthDetails() {
             const inputs = getValidatedInputs();
@@ -540,97 +481,68 @@
             const singleMonthTableBody = document.getElementById('singleMonthTableBody');
             const singleMonthErrorEl = document.getElementById('singleMonthErrorMessage');
 
-            singleMonthTable.style.display = 'none';
-            singleMonthTableBody.innerHTML = '';
-            singleMonthErrorEl.style.display = 'none';
-            singleMonthErrorEl.textContent = '';
+            singleMonthTable.style.display = 'none'; singleMonthTableBody.innerHTML = '';
+            singleMonthErrorEl.style.display = 'none'; singleMonthErrorEl.textContent = '';
 
             if (isNaN(targetMonth) || targetMonth <= 0) {
                 singleMonthErrorEl.textContent = 'Please enter a valid positive month number.';
-                singleMonthErrorEl.style.display = 'block';
-                return;
+                singleMonthErrorEl.style.display = 'block'; return;
             }
             if (targetMonth > loanTermMonths) {
                 singleMonthErrorEl.textContent = `Month number cannot exceed loan term (${loanTermMonths} months).`;
-                singleMonthErrorEl.style.display = 'block';
-                return;
+                singleMonthErrorEl.style.display = 'block'; return;
             }
 
             const monthlyLoanPayment = calculateMonthlyPayment(loanAmount, annualInterestRate, loanTermMonths);
             if (monthlyLoanPayment === Infinity || isNaN(monthlyLoanPayment) || (monthlyLoanPayment <= 0 && annualInterestRate > 0 && loanAmount > 0)) {
                  singleMonthErrorEl.textContent = 'Could not calculate a valid monthly payment with current loan details.';
-                 singleMonthErrorEl.style.display = 'block';
-                 return;
+                 singleMonthErrorEl.style.display = 'block'; return;
             }
             
-            // CORRECTED Upfront Cash Calculation for single month simulation
             const costToCoverByLoanOrOtherSingle = purchasePrice + downPayment;
             const upfrontCashSingle = loanAmount - costToCoverByLoanOrOtherSingle;
-
-            let currentBalance = loanAmount;
-            // CORRECTED: Start cumulative profit simulation with the correct upfront cash
+            let currentBalance = loanAmount; 
             let cumulativeProfitAtTargetMonthStart = upfrontCashSingle;
 
-
-            for (let m = 1; m < targetMonth; m++) {
+            for (let m = 1; m < targetMonth; m++) { 
                 if (currentBalance <= 0.005) break; 
                 const interest = currentBalance * (annualInterestRate / 100 / 12);
                 let principal = monthlyLoanPayment - interest;
                 let payment = monthlyLoanPayment;
-
-                if (principal > currentBalance || m === loanTermMonths) { 
-                    principal = currentBalance;
-                    payment = interest + principal;
-                }
+                if (principal > currentBalance || m === loanTermMonths) { principal = currentBalance; payment = interest + principal; }
                 currentBalance -= principal;
                 if (currentBalance < 0.005 && currentBalance > -0.005) currentBalance = 0;
-                
                 cumulativeProfitAtTargetMonthStart += (monthlyRent - payment);
             }
-
-            // Check if loan was paid off *before* the target month
+            
             if (currentBalance <= 0.005 && targetMonth > 1) {
-                 let paidOffEarly = false;
-                 let tempBalanceCheck = loanAmount;
-                 for(let k=1; k < targetMonth; k++){ // Iterate up to the month *before* targetMonth
-                    if (tempBalanceCheck <= 0.005) { // If already paid before even starting this month's check
-                        paidOffEarly = true;
-                        break;
-                    }
+                 let paidOffEarlyMessage = false; let tempBalanceCheck = loanAmount;
+                 for(let k=1; k < targetMonth; k++){ 
+                    if (tempBalanceCheck <= 0.005) { paidOffEarlyMessage = true; break; }
                     const i_check = tempBalanceCheck * (annualInterestRate / 100 / 12);
                     let p_check = monthlyLoanPayment - i_check;
                     if (p_check > tempBalanceCheck) p_check = tempBalanceCheck;
                     tempBalanceCheck -= p_check;
-                    if(tempBalanceCheck <= 0.005) { // Paid off in month k
-                        if(k < targetMonth) paidOffEarly = true; // Check if k is indeed before targetMonth
-                        break;
-                    }
+                    if(tempBalanceCheck <= 0.005 && k < targetMonth) { paidOffEarlyMessage = true; break; }
                  }
-                 if(paidOffEarly){
-                    singleMonthErrorEl.textContent = `Loan is fully paid off before month ${targetMonth}. Details shown for last payment month possible.`;
-                    // For simplicity, we will still calculate the target month assuming it was the last payment if it's already paid off.
-                    // Or, we could strictly error out.
-                    // Let's proceed to show the target month data, it will reflect 0 balance if paid prior.
+                 if(paidOffEarlyMessage){
+                    singleMonthErrorEl.textContent = `Note: Loan is fully paid off before month ${targetMonth}. Details reflect this.`;
+                    singleMonthErrorEl.style.display = 'block'; 
                  }
             }
-
 
             const interestForTargetMonth = (currentBalance > 0) ? currentBalance * (annualInterestRate / 100 / 12) : 0;
             let principalForTargetMonth = (currentBalance > 0) ? monthlyLoanPayment - interestForTargetMonth : 0;
             let actualPaymentTargetMonth = (currentBalance > 0) ? monthlyLoanPayment : 0;
 
             if (currentBalance <= 0.005) { 
-                 principalForTargetMonth = 0;
-                 interestForTargetMonth = 0;
-                 actualPaymentTargetMonth = 0;
-            } else if (principalForTargetMonth > currentBalance || targetMonth === loanTermMonths) {
-                principalForTargetMonth = currentBalance; // Pay off exactly what's left
-                actualPaymentTargetMonth = interestForTargetMonth + principalForTargetMonth;
+                 principalForTargetMonth = 0; interestForTargetMonth = 0; actualPaymentTargetMonth = 0;
+            } else if (principalForTargetMonth > currentBalance || targetMonth === loanTermMonths) { 
+                principalForTargetMonth = currentBalance; actualPaymentTargetMonth = interestForTargetMonth + principalForTargetMonth;
             }
 
             const balanceAfterTargetMonth = Math.max(0, currentBalance - principalForTargetMonth);
             const cashFlowTargetMonth = monthlyRent - actualPaymentTargetMonth;
-            // Note: cumulativeProfitAtTargetMonthStart is the profit *before* this target month's cash flow
             const cumulativeProfitAfterTargetMonth = cumulativeProfitAtTargetMonthStart + cashFlowTargetMonth;
 
             let row = singleMonthTableBody.insertRow();
@@ -646,6 +558,76 @@
             row.cells[7].style.color = cumulativeProfitAfterTargetMonth >= 0 ? 'green' : 'red';
             
             singleMonthTable.style.display = 'table';
+        }
+
+        function exportScheduleToCSV() {
+            console.log("Export function called.");
+            if (!fullAmortizationData || fullAmortizationData.length === 0) {
+                alert("Please calculate the schedule first by clicking 'Calculate & Generate Full Schedule'.");
+                console.log("No data to export.");
+                return;
+            }
+            console.log("Data found, proceeding with CSV generation.");
+
+            const headers = [
+                "Month", "Rent Income", "Loan Payment", "Principal Paid",
+                "Interest Paid", "Monthly Cash Flow", "Loan Balance", "Cumulative Profit"
+            ];
+            
+            // Add BOM for better Excel UTF-8 compatibility, though not strictly necessary for the blank page issue.
+            let csvContent = "\uFEFF" + headers.join(",") + "\n";
+
+            fullAmortizationData.forEach(row => {
+                const csvRow = [
+                    row.month,
+                    (typeof row.rentIncome === 'number' ? row.rentIncome.toFixed(2) : row.rentIncome),
+                    (typeof row.loanPayment === 'number' ? row.loanPayment.toFixed(2) : row.loanPayment),
+                    (typeof row.principalPaid === 'number' ? row.principalPaid.toFixed(2) : row.principalPaid),
+                    (typeof row.interestPaid === 'number' ? row.interestPaid.toFixed(2) : row.interestPaid),
+                    (typeof row.monthlyCashFlow === 'number' ? row.monthlyCashFlow.toFixed(2) : row.monthlyCashFlow),
+                    (typeof row.loanBalance === 'number' ? row.loanBalance.toFixed(2) : row.loanBalance),
+                    (typeof row.cumulativeProfit === 'number' ? row.cumulativeProfit.toFixed(2) : row.cumulativeProfit)
+                ];
+                csvContent += csvRow.join(",") + "\n";
+            });
+
+            // console.log("CSV Content (first 500 chars):\n", csvContent.substring(0, 500)); 
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+
+            if (link.download !== undefined) { // Check for download attribute support
+                const url = URL.createObjectURL(blob);
+                console.log("Blob URL created:", url); 
+
+                link.setAttribute("href", url);
+                link.setAttribute("download", "amortization_profit_schedule.csv");
+                link.style.display = 'none'; // Changed from visibility:hidden, though both should work
+                document.body.appendChild(link);
+                
+                console.log("Attempting to click link...");
+                try {
+                    link.click();
+                    console.log("Link clicked successfully.");
+                } catch (e) {
+                    console.error("Error clicking link:", e);
+                    alert("Could not initiate download due to an error. Check console.");
+                }
+                
+                // Delay cleanup to ensure download initiation has time to complete
+                setTimeout(() => {
+                    console.log("Cleaning up: removing link and revoking URL.");
+                    if (document.body.contains(link)) {
+                        document.body.removeChild(link);
+                    }
+                    URL.revokeObjectURL(url);
+                    console.log("Cleanup complete.");
+                }, 150); // Slightly increased delay
+
+            } else {
+                console.log("Download attribute not supported by this browser.");
+                alert("CSV export is not fully supported in this browser.");
+            }
         }
 
     </script>
