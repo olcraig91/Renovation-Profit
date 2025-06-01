@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Renovation Income & Amortization Calculator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 25px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 850px; /* Slightly increased width for new section */
+            margin: 20px auto;
+        }
+
+        h1, h2, h3 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .input-section, .summary-section, .amortization-section, .single-month-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+        }
+        button.secondary {
+            background-color: #6c757d;
+            margin-top: 10px;
+        }
+        button.secondary:hover {
+            background-color: #5a6268;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .summary-section h3, .amortization-section h3, .single-month-section h3 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+
+        .summary-item {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .summary-item span {
+            font-weight: bold;
+            float: right;
+        }
+        .profit { color: #28a745; background-color: #e9f5ec; }
+        .loss { color: #dc3545; background-color: #fbebeb; }
+        .neutral { color: #17a2b8; background-color: #e7f6f8; }
+
+
+        #amortizationTable, #singleMonthTable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+
+        #amortizationTable th, #amortizationTable td,
+        #singleMonthTable th, #singleMonthTable td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: right;
+        }
+        #amortizationTable th:first-child, #amortizationTable td:first-child,
+        #singleMonthTable th:first-child, #singleMonthTable td:first-child {
+            text-align: center;
+        }
+
+        #amortizationTable th, #singleMonthTable th {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+
+        #amortizationTable tbody tr:nth-child(even),
+        #singleMonthTable tbody tr:nth-child(even) { /* Though only one data row */
+            background-color: #f9f9f9;
+        }
+        #amortizationTable tbody tr:hover,
+        #singleMonthTable tbody tr:hover {
+            background-color: #e9ecef;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #fbebeb;
+            border: 1px solid #dc3545;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Advanced Renovation Income & Amortization Calculator</h1>
+
+        <div class="input-section">
+            <h3>Property & Loan Details</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="purchasePrice">Original Purchase Price ($):</label>
+                    <input type="number" id="purchasePrice" placeholder="e.g., 150000" step="any">
+                </div>
+                <div class="form-group">
+                    <label for="loanAmount">Loan Amount (Principal) ($):</label>
+                    <input type="number" id="loanAmount" placeholder="e.g., 200000" step="any">
+                </div>
+                <div class="form-group">
+                    <label for="interestRate">Annual Interest Rate (%):</label>
+                    <input type="number" id="interestRate" placeholder="e.g., 5.5" step="any">
+                </div>
+                <div class="form-group">
+                    <label for="loanTermMonths">Loan Term (Months):</label>
+                    <input type="number" id="loanTermMonths" placeholder="e.g., 360" step="1" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="monthlyRent">Monthly Rent Income ($):</label>
+                    <input type="number" id="monthlyRent" placeholder="e.g., 1500" step="any">
+                </div>
+            </div>
+            <button onclick="calculateAndDisplay()">Calculate & Generate Full Schedule</button>
+            <p id="errorMessage" class="error" style="display: none;"></p>
+        </div>
+
+        <div class="summary-section" id="summarySection" style="display: none;">
+            <h3>Financial Summary</h3>
+            <div id="upfrontCashResult" class="summary-item">Upfront Cash (Loan - Purchase): <span></span></div>
+            <div id="calculatedMonthlyPaymentResult" class="summary-item neutral">Calculated Monthly Loan Payment: <span></span></div>
+            <div id="monthlyCashFlowResult" class="summary-item">Monthly Cash Flow (Rent - Loan Pmt): <span></span></div>
+        </div>
+
+        <div class="single-month-section" id="singleMonthQuerySection" style="display: none;">
+            <h3>View Specific Month Details</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="specificMonth">Enter Month Number:</label>
+                    <input type="number" id="specificMonth" placeholder="e.g., 12" min="1">
+                </div>
+            </div>
+            <button onclick="displaySingleMonthDetails()" class="secondary">Show Month Details</button>
+            <div id="singleMonthResultDisplay">
+                <table id="singleMonthTable" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Rent Income</th>
+                            <th>Loan Pmt</th>
+                            <th>Principal</th>
+                            <th>Interest</th>
+                            <th>Cash Flow</th>
+                            <th>Loan Balance</th>
+                            <th>Cum. Profit</th>
+                        </tr>
+                    </thead>
+                    <tbody id="singleMonthTableBody">
+                    </tbody>
+                </table>
+            </div>
+            <p id="singleMonthErrorMessage" class="error" style="display: none;"></p>
+        </div>
+
+        <div class="amortization-section" id="amortizationSection" style="display: none;">
+            <h3>Full Amortization & Profit Schedule</h3>
+            <table id="amortizationTable">
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th>Rent Income</th>
+                        <th>Loan Payment</th>
+                        <th>Principal Paid</th>
+                        <th>Interest Paid</th>
+                        <th>Monthly Cash Flow</th>
+                        <th>Loan Balance</th>
+                        <th>Cumulative Profit</th>
+                    </tr>
+                </thead>
+                <tbody id="amortizationTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // --- Global state (or re-read from inputs) ---
+        // For simplicity, we'll re-read inputs for single month view,
+        // assuming calculateAndDisplay has validated them.
+        // If performance was critical for very complex scenarios,
+        // we might store some calculated values.
+
+        function formatCurrency(amount) {
+            return `$${amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
+        }
+
+        function calculateMonthlyPayment(principal, annualInterestRate, loanTermMonths) {
+            if (principal <= 0 || loanTermMonths <= 0) return 0;
+            if (annualInterestRate < 0) return 0; // Should be caught by validation
+            if (annualInterestRate === 0) return principal / loanTermMonths;
+
+            const monthlyInterestRate = (annualInterestRate / 100) / 12;
+            const numerator = monthlyInterestRate * Math.pow(1 + monthlyInterestRate, loanTermMonths);
+            const denominator = Math.pow(1 + monthlyInterestRate, loanTermMonths) - 1;
+            
+            if (denominator === 0) return principal / loanTermMonths; 
+
+            return principal * (numerator / denominator);
+        }
+
+        function getValidatedInputs() {
+            const purchasePrice = parseFloat(document.getElementById('purchasePrice').value);
+            const loanAmount = parseFloat(document.getElementById('loanAmount').value);
+            const annualInterestRate = parseFloat(document.getElementById('interestRate').value);
+            const loanTermMonths = parseInt(document.getElementById('loanTermMonths').value, 10);
+            const monthlyRent = parseFloat(document.getElementById('monthlyRent').value);
+            const errorMessageEl = document.getElementById('errorMessage');
+
+            if (isNaN(purchasePrice) || isNaN(loanAmount) || isNaN(annualInterestRate) || isNaN(loanTermMonths) || isNaN(monthlyRent)) {
+                errorMessageEl.textContent = 'Please enter valid numbers in all main fields.';
+                errorMessageEl.style.display = 'block';
+                return null;
+            }
+            if (purchasePrice < 0 || loanAmount <= 0 || annualInterestRate < 0 || loanTermMonths <= 0 || monthlyRent < 0) {
+                errorMessageEl.textContent = 'Loan amount and term must be positive. Other values cannot be negative.';
+                errorMessageEl.style.display = 'block';
+                return null;
+            }
+            if (loanTermMonths > 1200) { // Limit term to 100 years
+                errorMessageEl.textContent = 'Loan term is too long (max 1200 months).';
+                errorMessageEl.style.display = 'block';
+                return null;
+            }
+            errorMessageEl.style.display = 'none';
+            errorMessageEl.textContent = '';
+            return { purchasePrice, loanAmount, annualInterestRate, loanTermMonths, monthlyRent };
+        }
+
+
+        function calculateAndDisplay() {
+            const inputs = getValidatedInputs();
+            if (!inputs) return;
+
+            const { purchasePrice, loanAmount, annualInterestRate, loanTermMonths, monthlyRent } = inputs;
+
+            const summarySection = document.getElementById('summarySection');
+            const amortizationSection = document.getElementById('amortizationSection');
+            const singleMonthQuerySection = document.getElementById('singleMonthQuerySection');
+            const upfrontCashResultEl = document.getElementById('upfrontCashResult').querySelector('span');
+            const calculatedMonthlyPaymentResultEl = document.getElementById('calculatedMonthlyPaymentResult').querySelector('span');
+            const monthlyCashFlowResultEl = document.getElementById('monthlyCashFlowResult').querySelector('span');
+            const amortizationTableBody = document.getElementById('amortizationTableBody');
+            
+            // Clear previous results
+            summarySection.style.display = 'none';
+            amortizationSection.style.display = 'none';
+            singleMonthQuerySection.style.display = 'none'; // Hide single month section initially
+            document.getElementById('singleMonthTable').style.display = 'none';
+            document.getElementById('singleMonthTableBody').innerHTML = '';
+            document.getElementById('singleMonthErrorMessage').style.display = 'none';
+
+            amortizationTableBody.innerHTML = '';
+
+            // --- Calculations ---
+            const upfrontCash = loanAmount - purchasePrice;
+            const monthlyLoanPayment = calculateMonthlyPayment(loanAmount, annualInterestRate, loanTermMonths);
+            
+            if (monthlyLoanPayment === Infinity || isNaN(monthlyLoanPayment) || monthlyLoanPayment <=0 && annualInterestRate > 0) {
+                 document.getElementById('errorMessage').textContent = 'Could not calculate a valid monthly payment. Check interest rate and term.';
+                 document.getElementById('errorMessage').style.display = 'block';
+                 return;
+            }
+
+            const monthlyNetCashFlow = monthlyRent - monthlyLoanPayment;
+
+            // --- Display Summary ---
+            upfrontCashResultEl.textContent = formatCurrency(upfrontCash);
+            document.getElementById('upfrontCashResult').className = 'summary-item ' + (upfrontCash >= 0 ? 'profit' : 'loss');
+            
+            calculatedMonthlyPaymentResultEl.textContent = formatCurrency(monthlyLoanPayment);
+
+            monthlyCashFlowResultEl.textContent = formatCurrency(monthlyNetCashFlow);
+            const monthlyCashFlowEl = document.getElementById('monthlyCashFlowResult');
+            monthlyCashFlowEl.className = 'summary-item ' + (monthlyNetCashFlow >= 0 ? 'profit' : 'loss');
+
+            summarySection.style.display = 'block';
+
+            // --- Generate Full Amortization Schedule ---
+            let remainingBalance = loanAmount;
+            let cumulativeProfit = upfrontCash;
+
+            let initialRow = amortizationTableBody.insertRow();
+            initialRow.insertCell().textContent = "Start";
+            initialRow.insertCell().textContent = "-";
+            initialRow.insertCell().textContent = "-";
+            initialRow.insertCell().textContent = "-";
+            initialRow.insertCell().textContent = "-";
+            initialRow.insertCell().textContent = "-";
+            initialRow.insertCell().textContent = formatCurrency(remainingBalance);
+            initialRow.insertCell().textContent = formatCurrency(cumulativeProfit);
+            initialRow.style.fontWeight = 'bold';
+            initialRow.style.backgroundColor = '#e9ecef';
+
+            for (let month = 1; month <= loanTermMonths; month++) {
+                const interestForMonth = remainingBalance * (annualInterestRate / 100 / 12);
+                let principalForMonth = monthlyLoanPayment - interestForMonth;
+                let actualPaymentThisMonth = monthlyLoanPayment;
+
+                if (remainingBalance <= 0) break; // Should not happen if calculation is right, but defensive
+
+                if (principalForMonth > remainingBalance || month === loanTermMonths) {
+                    principalForMonth = remainingBalance; // Pay off exactly what's left
+                    actualPaymentThisMonth = interestForMonth + principalForMonth;
+                }
+                
+                remainingBalance -= principalForMonth;
+                if (remainingBalance < 0.005 && remainingBalance > -0.005) remainingBalance = 0; // Correct small floating point inaccuracies
+
+                const cashFlowThisMonth = monthlyRent - actualPaymentThisMonth;
+                cumulativeProfit += cashFlowThisMonth;
+
+                let row = amortizationTableBody.insertRow();
+                row.insertCell().textContent = month;
+                row.insertCell().textContent = formatCurrency(monthlyRent);
+                row.insertCell().textContent = formatCurrency(actualPaymentThisMonth);
+                row.insertCell().textContent = formatCurrency(principalForMonth);
+                row.insertCell().textContent = formatCurrency(interestForMonth);
+                row.insertCell().textContent = formatCurrency(cashFlowThisMonth);
+                row.cells[5].style.color = cashFlowThisMonth >= 0 ? 'green' : 'red';
+                row.insertCell().textContent = formatCurrency(remainingBalance);
+                row.insertCell().textContent = formatCurrency(cumulativeProfit);
+                row.cells[7].style.color = cumulativeProfit >= 0 ? 'green' : 'red';
+
+                if (remainingBalance <= 0) {
+                    break; 
+                }
+            }
+            amortizationSection.style.display = 'block';
+            singleMonthQuerySection.style.display = 'block'; // Show the single month query section now
+            document.getElementById('specificMonth').max = loanTermMonths; // Set max for input
+        }
+
+
+        function displaySingleMonthDetails() {
+            const inputs = getValidatedInputs(); // Re-validate main inputs
+            if (!inputs) {
+                // Hide single month results if main inputs are bad
+                document.getElementById('singleMonthTable').style.display = 'none';
+                document.getElementById('singleMonthTableBody').innerHTML = '';
+                document.getElementById('singleMonthErrorMessage').textContent = 'Fix errors in main Property & Loan Details first.';
+                document.getElementById('singleMonthErrorMessage').style.display = 'block';
+                return;
+            }
+            const { purchasePrice, loanAmount, annualInterestRate, loanTermMonths, monthlyRent } = inputs;
+
+            const specificMonthInput = document.getElementById('specificMonth');
+            const targetMonth = parseInt(specificMonthInput.value, 10);
+            
+            const singleMonthTable = document.getElementById('singleMonthTable');
+            const singleMonthTableBody = document.getElementById('singleMonthTableBody');
+            const singleMonthErrorEl = document.getElementById('singleMonthErrorMessage');
+
+            singleMonthTable.style.display = 'none';
+            singleMonthTableBody.innerHTML = '';
+            singleMonthErrorEl.style.display = 'none';
+            singleMonthErrorEl.textContent = '';
+
+            if (isNaN(targetMonth) || targetMonth <= 0) {
+                singleMonthErrorEl.textContent = 'Please enter a valid positive month number.';
+                singleMonthErrorEl.style.display = 'block';
+                return;
+            }
+            if (targetMonth > loanTermMonths) {
+                singleMonthErrorEl.textContent = `Month number cannot exceed loan term (${loanTermMonths} months).`;
+                singleMonthErrorEl.style.display = 'block';
+                return;
+            }
+
+            const monthlyLoanPayment = calculateMonthlyPayment(loanAmount, annualInterestRate, loanTermMonths);
+            if (monthlyLoanPayment === Infinity || isNaN(monthlyLoanPayment) || (monthlyLoanPayment <= 0 && annualInterestRate > 0)) {
+                 singleMonthErrorEl.textContent = 'Could not calculate a valid monthly payment with current loan details.';
+                 singleMonthErrorEl.style.display = 'block';
+                 return;
+            }
+            
+            const upfrontCash = loanAmount - purchasePrice;
+
+            let currentBalance = loanAmount;
+            let cumulativeProfitAtTargetMonthStart = upfrontCash; // Profit *before* target month's cash flow
+
+            // Simulate amortization up to the month *before* the target month
+            for (let m = 1; m < targetMonth; m++) {
+                if (currentBalance <= 0) break;
+                const interest = currentBalance * (annualInterestRate / 100 / 12);
+                let principal = monthlyLoanPayment - interest;
+                let payment = monthlyLoanPayment;
+
+                if (principal > currentBalance || m === loanTermMonths) { // Though loop stops before loanTermMonths here
+                    principal = currentBalance;
+                    payment = interest + principal;
+                }
+                currentBalance -= principal;
+                if (currentBalance < 0.005 && currentBalance > -0.005) currentBalance = 0;
+                
+                cumulativeProfitAtTargetMonthStart += (monthlyRent - payment);
+            }
+
+            // Now calculate for the target month
+            if (currentBalance <= 0 && targetMonth > 1) { // Loan paid off before targetMonth
+                singleMonthErrorEl.textContent = `Loan is fully paid off before month ${targetMonth}.`;
+                singleMonthErrorEl.style.display = 'block';
+                return;
+            }
+
+            const interestForTargetMonth = currentBalance * (annualInterestRate / 100 / 12);
+            let principalForTargetMonth = monthlyLoanPayment - interestForTargetMonth;
+            let actualPaymentTargetMonth = monthlyLoanPayment;
+
+            if (principalForTargetMonth > currentBalance || targetMonth === loanTermMonths) {
+                principalForTargetMonth = currentBalance;
+                actualPaymentTargetMonth = interestForTargetMonth + principalForTargetMonth;
+            }
+
+            const balanceAfterTargetMonth = Math.max(0, currentBalance - principalForTargetMonth); // Ensure not negative
+            const cashFlowTargetMonth = monthlyRent - actualPaymentTargetMonth;
+            const cumulativeProfitAfterTargetMonth = cumulativeProfitAtTargetMonthStart + cashFlowTargetMonth;
+
+            // Display the single row
+            let row = singleMonthTableBody.insertRow();
+            row.insertCell().textContent = targetMonth;
+            row.insertCell().textContent = formatCurrency(monthlyRent);
+            row.insertCell().textContent = formatCurrency(actualPaymentTargetMonth);
+            row.insertCell().textContent = formatCurrency(principalForTargetMonth);
+            row.insertCell().textContent = formatCurrency(interestForTargetMonth);
+            row.insertCell().textContent = formatCurrency(cashFlowTargetMonth);
+            row.cells[5].style.color = cashFlowTargetMonth >= 0 ? 'green' : 'red';
+            row.insertCell().textContent = formatCurrency(balanceAfterTargetMonth);
+            row.insertCell().textContent = formatCurrency(cumulativeProfitAfterTargetMonth);
+            row.cells[7].style.color = cumulativeProfitAfterTargetMonth >= 0 ? 'green' : 'red';
+            
+            singleMonthTable.style.display = 'table'; // Use 'table' for proper table display
+        }
+
+    </script>
+
+</body>
+</html>
