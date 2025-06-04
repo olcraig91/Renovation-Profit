@@ -21,7 +21,7 @@
             border-radius: 10px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             width: 100%;
-            max-width: 900px; /* Increased width for graph */
+            max-width: 900px;
             margin: 20px auto;
         }
 
@@ -89,11 +89,70 @@
             background-color: #0056b3;
         }
 
-        .summary-section h3, .amortization-section h3, .single-month-section h3, .graph-section h3 {
+        #showMonthDetailsBtn {
+            background-color: #28A745;
+        }
+        #showMonthDetailsBtn:hover {
+            background-color: #218838;
+        }
+
+        #toggleFullScheduleBtn {
+            background-color: #28A745;
+            color: white;
+        }
+        #toggleFullScheduleBtn:hover {
+            background-color: #218838;
+        }
+
+        #bottomButtonContainer #toggleFullScheduleBtn {
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        #amortizationHeaderControls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #amortizationHeaderControls h3 {
+            margin: 0;
+            margin-right: auto;
+            flex-grow: 1;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        #amortizationHeaderControls button,
+        #amortizationHeaderControls input#csvFilename {
+            padding: 8px;
+            font-size: 14px;
+            margin-top: 0;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+        #amortizationHeaderControls button {
+            padding-left: 15px;
+            padding-right: 15px;
+            width: auto;
+        }
+        #amortizationHeaderControls input#csvFilename {
+            border: 1px solid #ccc;
+            width: 180px;
+            box-sizing: border-box;
+        }
+
+        .summary-section h3, 
+        .amortization-section > h3,
+        .single-month-section h3, 
+        .graph-section h3 {
             margin-top: 0;
             color: #333;
             border-bottom: 2px solid #007bff;
             padding-bottom: 10px;
+        }
+        .amortization-section #amortizationHeaderControls h3 {
+            border-bottom: none;
+            padding-bottom: 0;
+            text-align: left;
         }
 
         .summary-item {
@@ -110,12 +169,13 @@
         .loss { color: #dc3545; background-color: #fbebeb; }
         .neutral { color: #17a2b8; background-color: #e7f6f8; }
 
-
         #amortizationTable, #singleMonthTable {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
             font-size: 0.9em;
+            border-radius: 8px;
+            overflow: hidden;
         }
 
         #amortizationTable th, #amortizationTable td,
@@ -156,17 +216,107 @@
         }
 
         #loanChartCanvas {
-            max-height: 400px; /* Control chart height */
+            max-height: 400px;
+        }
+        #bottomButtonContainer {
+            margin-top: 20px;
+        }
+
+        .preset-menu-container {
+            position: relative; 
+            margin-bottom: 20px;
+            text-align: left; 
+        }
+
+        #loadPresetBtn {
+            display: flex; 
+            justify-content: space-between;
+            align-items: center;
+            width: auto; 
+            min-width: 250px; 
+            padding: 10px 15px; 
+            background-color: #fff; 
+            color: #495057; 
+            border: 1px solid #ced4da; 
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+            margin-top: 0; 
+            margin-bottom: 10px; 
+            text-align: left;
+        }
+        #loadPresetBtn:hover {
+            background-color: #e9ecef; 
+            border-color: #adb5bd;
+        }
+        .dropdown-caret {
+            font-size: 1em; 
+            color: #6c757d; 
+            margin-left: 8px; 
+        }
+
+
+        .preset-options-dropdown {
+            display: none; 
+            position: absolute;
+            background-color: #fff;
+            min-width: 280px; 
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 100;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            left: 0; 
+            margin-top: 5px; 
+        }
+
+        .preset-options-dropdown button {
+            color: #333;
+            padding: 10px 15px;
+            text-decoration: none;
+            display: block;
+            width: 100%;
+            text-align: left;
+            background-color: transparent;
+            border: none;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 0; 
+            border-radius: 0; 
+        }
+        .preset-options-dropdown button:last-child {
+            border-bottom: none;
+        }
+        .preset-options-dropdown button:hover {
+            background-color: #e9ecef;
+            color: #0056b3;
+        }
+        .preset-options-dropdown .preset-separator {
+            height: 1px;
+            margin: 5px 0;
+            background-color: #ccc;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>Comprehensive Renovation & Investment Calculator</h1>
+        <h1>Property Investment Calculator</h1>
+
+        <div class="preset-menu-container">
+            <button type="button" id="loadPresetBtn">
+                <span id="loadPresetBtnLabel">Preset Options</span>
+                <span class="dropdown-caret">▼</span>
+            </button>
+            <div id="presetOptions" class="preset-options-dropdown">
+                <!-- Preset options will be populated by JavaScript -->
+            </div>
+        </div>
 
         <div class="input-section">
-            <h3>Property & Loan Details</h3>
+            <h3>Property, Loan & Expense Details</h3>
             <div class="form-grid">
                 <div class="form-group">
                     <label for="purchasePrice">Original Purchase Price ($):</label>
@@ -192,6 +342,18 @@
                     <label for="monthlyRent">Monthly Rent Income ($):</label>
                     <input type="number" id="monthlyRent" placeholder="e.g., 1500" step="any">
                 </div>
+                <div class="form-group">
+                    <label for="monthlyInsurance">Monthly Insurance ($):</label>
+                    <input type="number" id="monthlyInsurance" placeholder="e.g., 100" step="any" value="0">
+                </div>
+                <div class="form-group">
+                    <label for="monthlyPropertyTax">Monthly Property Tax ($):</label>
+                    <input type="number" id="monthlyPropertyTax" placeholder="e.g., 200" step="any" value="0">
+                </div>
+                <div class="form-group">
+                    <label for="monthlyOperatingExpenses">Monthly Operating Expenses ($):</label>
+                    <input type="number" id="monthlyOperatingExpenses" placeholder="e.g., 150" step="any" value="0">
+                </div>
             </div>
             <button type="button" onclick="calculateAndDisplay()">Calculate & Generate Full Schedule</button>
             <p id="errorMessage" class="error" style="display: none;"></p>
@@ -201,7 +363,7 @@
             <h3>Financial Summary</h3>
             <div id="upfrontCashResult" class="summary-item">Upfront Cash (Loan - (Purchase + Down Pmt)): <span></span></div>
             <div id="calculatedMonthlyPaymentResult" class="summary-item neutral">Calculated Monthly Loan Payment: <span></span></div>
-            <div id="monthlyCashFlowResult" class="summary-item">Monthly Cash Flow (Rent - Loan Pmt): <span></span></div>
+            <div id="monthlyCashFlowResult" class="summary-item">Monthly Cash Flow (Rent - Loan Pmt - Expenses): <span></span></div>
         </div>
 
         <div class="graph-section" id="graphSection" style="display: none;">
@@ -217,7 +379,7 @@
                     <input type="number" id="specificMonth" placeholder="e.g., 12" min="1">
                 </div>
             </div>
-            <button type="button" onclick="displaySingleMonthDetails()" class="secondary">Show Month Details</button>
+            <button type="button" onclick="displaySingleMonthDetails()" id="showMonthDetailsBtn" class="secondary">Show Month Details</button>
             <div id="singleMonthResultDisplay">
                 <table id="singleMonthTable" style="display: none;">
                     <thead>
@@ -232,9 +394,10 @@
         </div>
 
         <div class="amortization-section" id="amortizationSection" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                 <h3 style="margin-bottom: 0;">Full Amortization & Profit Schedule</h3>
-                 <button type="button" onclick="exportScheduleToCSV()" id="exportCsvButton" class="secondary" style="margin-top:0; width: auto;">Export to CSV</button>
+            <div id="amortizationHeaderControls" style="margin-bottom: 10px;">
+                 <h3 style="">Full Amortization & Profit Schedule</h3>
+                 <input type="text" id="csvFilename" placeholder="filename.csv">
+                 <button type="button" onclick="exportScheduleToCSV()" id="exportCsvButton" class="secondary">Export to CSV</button>
             </div>
             <table id="amortizationTable">
                 <thead>
@@ -245,11 +408,206 @@
                 <tbody id="amortizationTableBody"></tbody>
             </table>
         </div>
-    </div>
+        
+        <div id="bottomButtonContainer">
+            <button type="button" id="toggleFullScheduleBtn" onclick="toggleFullScheduleDisplay()" style="display: none;">Show Amortization & Profit Schedule</button>
+        </div>
+    
+    </div> <!-- End of .container -->
+
 
     <script>
-        let loanChart = null; // Global variable to hold the chart instance
-        let fullAmortizationData = []; // To store data for CSV export
+        let loanChart = null; 
+        let fullAmortizationData = []; 
+
+        const toggleFullScheduleBtn = document.getElementById('toggleFullScheduleBtn');
+        const bottomButtonContainer = document.getElementById('bottomButtonContainer');
+        const amortizationHeaderControls = document.getElementById('amortizationHeaderControls');
+        const amortizationSection = document.getElementById('amortizationSection');
+        const csvFilenameInput = document.getElementById('csvFilename');
+        const exportCsvButton = document.getElementById('exportCsvButton');
+
+        const CUSTOM_PRESET_KEY = 'calculatorUserCustomPreset_v2'; 
+
+        const presetScenarios = [
+            {
+                name: "Starter Home (Low Down Pmt)",
+                purchasePrice: 150000, downPayment: 7500, loanAmount: 142500,
+                interestRate: 6.5, loanTermMonths: 360, monthlyRent: 1300,
+                monthlyInsurance: 80, monthlyPropertyTax: 120, monthlyOperatingExpenses: 100
+            },
+            {
+                name: "Investment Property (20% Down)",
+                purchasePrice: 250000, downPayment: 50000, loanAmount: 200000,
+                interestRate: 7.0, loanTermMonths: 360, monthlyRent: 2200,
+                monthlyInsurance: 120, monthlyPropertyTax: 250, monthlyOperatingExpenses: 200
+            },
+            {
+                name: "Quick Flip (Short Term)",
+                purchasePrice: 100000, downPayment: 25000, loanAmount: 75000,
+                interestRate: 9.5, loanTermMonths: 60, monthlyRent: 1000,
+                monthlyInsurance: 60, monthlyPropertyTax: 80, monthlyOperatingExpenses: 70
+            }
+        ];
+
+        const loadPresetBtn = document.getElementById('loadPresetBtn');
+        const presetOptionsDiv = document.getElementById('presetOptions');
+
+        function populatePresetOptions() {
+            presetOptionsDiv.innerHTML = ''; 
+            presetScenarios.forEach(scenario => {
+                const button = document.createElement('button');
+                button.textContent = scenario.name;
+                button.type = 'button';
+                button.onclick = () => applyPreset(scenario);
+                presetOptionsDiv.appendChild(button);
+            });
+            let separator1 = document.createElement('div');
+            separator1.className = 'preset-separator';
+            presetOptionsDiv.appendChild(separator1);
+            const loadCustomButton = document.createElement('button');
+            loadCustomButton.textContent = "Load My Custom Preset";
+            loadCustomButton.type = 'button';
+            loadCustomButton.onclick = () => loadCustomPreset();
+            presetOptionsDiv.appendChild(loadCustomButton);
+            const saveCustomButton = document.createElement('button');
+            saveCustomButton.textContent = "Save Current as My Custom Preset";
+            saveCustomButton.type = 'button';
+            saveCustomButton.onclick = () => saveCustomPreset();
+            presetOptionsDiv.appendChild(saveCustomButton);
+            let separator2 = document.createElement('div');
+            separator2.className = 'preset-separator';
+            presetOptionsDiv.appendChild(separator2);
+            const clearButton = document.createElement('button');
+            clearButton.textContent = "--- Clear All Fields ---";
+            clearButton.type = 'button';
+            clearButton.onclick = () => applyPreset({
+                purchasePrice: "", downPayment: "0", loanAmount: "",
+                interestRate: "", loanTermMonths: "", monthlyRent: "",
+                monthlyInsurance: "0", monthlyPropertyTax: "0", monthlyOperatingExpenses: "0"
+            });
+            presetOptionsDiv.appendChild(clearButton);
+        }
+
+        function applyPreset(scenario) {
+            document.getElementById('purchasePrice').value = scenario.purchasePrice;
+            document.getElementById('downPayment').value = scenario.downPayment;
+            document.getElementById('loanAmount').value = scenario.loanAmount;
+            document.getElementById('interestRate').value = scenario.interestRate;
+            document.getElementById('loanTermMonths').value = scenario.loanTermMonths;
+            document.getElementById('monthlyRent').value = scenario.monthlyRent;
+            document.getElementById('monthlyInsurance').value = scenario.monthlyInsurance;
+            document.getElementById('monthlyPropertyTax').value = scenario.monthlyPropertyTax;
+            document.getElementById('monthlyOperatingExpenses').value = scenario.monthlyOperatingExpenses;
+            presetOptionsDiv.style.display = 'none';
+        }
+
+        function saveCustomPreset() {
+            const customData = {
+                purchasePrice: document.getElementById('purchasePrice').value,
+                downPayment: document.getElementById('downPayment').value,
+                loanAmount: document.getElementById('loanAmount').value,
+                interestRate: document.getElementById('interestRate').value,
+                loanTermMonths: document.getElementById('loanTermMonths').value,
+                monthlyRent: document.getElementById('monthlyRent').value,
+                monthlyInsurance: document.getElementById('monthlyInsurance').value,
+                monthlyPropertyTax: document.getElementById('monthlyPropertyTax').value,
+                monthlyOperatingExpenses: document.getElementById('monthlyOperatingExpenses').value
+            };
+            try {
+                localStorage.setItem(CUSTOM_PRESET_KEY, JSON.stringify(customData));
+                alert("Custom preset saved successfully!");
+            } catch (e) {
+                console.error("Error saving custom preset to localStorage:", e);
+                alert("Could not save custom preset. LocalStorage might be full or disabled.");
+            }
+            presetOptionsDiv.style.display = 'none';
+        }
+
+        function loadCustomPreset() {
+            try {
+                const savedData = localStorage.getItem(CUSTOM_PRESET_KEY);
+                if (savedData) {
+                    const customPreset = JSON.parse(savedData);
+                    const completePreset = {
+                        monthlyInsurance: "0", monthlyPropertyTax: "0", monthlyOperatingExpenses: "0",
+                        ...customPreset 
+                    };
+                    applyPreset(completePreset);
+                } else {
+                    alert("No custom preset found. Save one first using 'Save Current as My Custom Preset'.");
+                }
+            } catch (e) {
+                console.error("Error loading custom preset from localStorage:", e);
+                alert("Could not load custom preset. Data might be corrupted.");
+            }
+            presetOptionsDiv.style.display = 'none';
+        }
+
+        loadPresetBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            presetOptionsDiv.style.display = (presetOptionsDiv.style.display === 'block') ? 'none' : 'block';
+        });
+
+        document.addEventListener('click', function(event) {
+            if (!loadPresetBtn.contains(event.target) && !presetOptionsDiv.contains(event.target)) {
+                if (presetOptionsDiv.style.display === 'block') {
+                    presetOptionsDiv.style.display = 'none';
+                }
+            }
+        });
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            populatePresetOptions();
+
+            // --- START: Auto-fill logic for Purchase Price, Down Payment, and Loan Amount ---
+            const purchasePriceInput = document.getElementById('purchasePrice');
+            const downPaymentInput = document.getElementById('downPayment');
+            const loanAmountInput = document.getElementById('loanAmount');
+
+            if (purchasePriceInput && downPaymentInput && loanAmountInput) {
+                purchasePriceInput.addEventListener('input', () => {
+                    const pp = parseFloat(purchasePriceInput.value);
+
+                    if (!isNaN(pp) && pp >= 0) {
+                        const calculatedDownPayment = pp * 0.20;
+                        downPaymentInput.value = calculatedDownPayment.toFixed(2);
+                        
+                        const calculatedLoanAmount = pp - calculatedDownPayment; // Which is pp * 0.80
+                        loanAmountInput.value = calculatedLoanAmount.toFixed(2);
+                    } else {
+                        // If purchase price is invalid or empty, clear related fields
+                        downPaymentInput.value = '';
+                        loanAmountInput.value = '';
+                    }
+                });
+
+                downPaymentInput.addEventListener('input', () => {
+                    const pp = parseFloat(purchasePriceInput.value);
+                    const dp = parseFloat(downPaymentInput.value);
+
+                    if (!isNaN(pp) && pp >= 0) { // Purchase price must be valid
+                        if (!isNaN(dp) && dp >= 0) { // Down payment is valid and non-negative
+                            if (pp >= dp) { // Down payment is not more than purchase price
+                                loanAmountInput.value = (pp - dp).toFixed(2);
+                            } else {
+                                // Down payment exceeds purchase price, loan amount could be 0 or show error
+                                loanAmountInput.value = '0.00'; 
+                            }
+                        } else {
+                            // Down payment is invalid (e.g., cleared or non-numeric)
+                            // Loan amount becomes the full purchase price (assuming 0 down payment)
+                            loanAmountInput.value = pp.toFixed(2);
+                        }
+                    } else {
+                        // Purchase price itself is invalid, so can't reliably calculate loan amount
+                        loanAmountInput.value = '';
+                    }
+                });
+            }
+            // --- END: Auto-fill logic ---
+        });
+
 
         function formatCurrency(amount) {
             return `$${amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
@@ -259,30 +617,35 @@
             if (principal <= 0 || loanTermMonths <= 0) return 0;
             if (annualInterestRate < 0) return 0;
             if (annualInterestRate === 0) return principal / loanTermMonths;
-
             const monthlyInterestRate = (annualInterestRate / 100) / 12;
             const numerator = monthlyInterestRate * Math.pow(1 + monthlyInterestRate, loanTermMonths);
             const denominator = Math.pow(1 + monthlyInterestRate, loanTermMonths) - 1;
-            
             if (denominator === 0) return principal / loanTermMonths; 
             return principal * (numerator / denominator);
         }
 
         function getValidatedInputs() {
             const purchasePrice = parseFloat(document.getElementById('purchasePrice').value);
-            const downPayment = parseFloat(document.getElementById('downPayment').value); // Default is 0
+            const downPayment = parseFloat(document.getElementById('downPayment').value);
             const loanAmount = parseFloat(document.getElementById('loanAmount').value);
             const annualInterestRate = parseFloat(document.getElementById('interestRate').value);
             const loanTermMonths = parseInt(document.getElementById('loanTermMonths').value, 10);
             const monthlyRent = parseFloat(document.getElementById('monthlyRent').value);
+            const monthlyInsurance = parseFloat(document.getElementById('monthlyInsurance').value);
+            const monthlyPropertyTax = parseFloat(document.getElementById('monthlyPropertyTax').value);
+            const monthlyOperatingExpenses = parseFloat(document.getElementById('monthlyOperatingExpenses').value);
             const errorMessageEl = document.getElementById('errorMessage');
 
-            if (isNaN(purchasePrice) || isNaN(downPayment) || isNaN(loanAmount) || isNaN(annualInterestRate) || isNaN(loanTermMonths) || isNaN(monthlyRent)) {
-                errorMessageEl.textContent = 'Please enter valid numbers in all main fields.';
+            if (isNaN(purchasePrice) || isNaN(downPayment) || isNaN(loanAmount) || 
+                isNaN(annualInterestRate) || isNaN(loanTermMonths) || isNaN(monthlyRent) ||
+                isNaN(monthlyInsurance) || isNaN(monthlyPropertyTax) || isNaN(monthlyOperatingExpenses)) {
+                errorMessageEl.textContent = 'Please enter valid numbers in all fields.';
                 errorMessageEl.style.display = 'block';
                 return null;
             }
-            if (purchasePrice < 0 || downPayment < 0 || loanAmount <= 0 || annualInterestRate < 0 || loanTermMonths <= 0 || monthlyRent < 0) {
+            if (purchasePrice < 0 || downPayment < 0 || loanAmount <= 0 || 
+                annualInterestRate < 0 || loanTermMonths <= 0 || monthlyRent < 0 ||
+                monthlyInsurance < 0 || monthlyPropertyTax < 0 || monthlyOperatingExpenses < 0) {
                 errorMessageEl.textContent = 'Loan amount and term must be positive. Other values cannot be negative.';
                 errorMessageEl.style.display = 'block';
                 return null;
@@ -294,96 +657,73 @@
             }
             errorMessageEl.style.display = 'none';
             errorMessageEl.textContent = '';
-            return { purchasePrice, downPayment, loanAmount, annualInterestRate, loanTermMonths, monthlyRent };
+            return { 
+                purchasePrice, downPayment, loanAmount, annualInterestRate, loanTermMonths, monthlyRent,
+                monthlyInsurance, monthlyPropertyTax, monthlyOperatingExpenses
+            };
         }
-
 
         function calculateAndDisplay() {
             const inputs = getValidatedInputs();
             if (!inputs) return;
-
-            const { purchasePrice, downPayment, loanAmount, annualInterestRate, loanTermMonths, monthlyRent } = inputs;
-            
-            fullAmortizationData = []; // Reset data for CSV export
-
+            const { purchasePrice, downPayment, loanAmount, annualInterestRate, loanTermMonths, monthlyRent,
+                    monthlyInsurance, monthlyPropertyTax, monthlyOperatingExpenses } = inputs;
+            fullAmortizationData = []; 
             const summarySection = document.getElementById('summarySection');
             const graphSection = document.getElementById('graphSection');
-            const amortizationSection = document.getElementById('amortizationSection');
             const singleMonthQuerySection = document.getElementById('singleMonthQuerySection');
-            
             const upfrontCashResultEl = document.getElementById('upfrontCashResult').querySelector('span');
             const calculatedMonthlyPaymentResultEl = document.getElementById('calculatedMonthlyPaymentResult').querySelector('span');
             const monthlyCashFlowResultEl = document.getElementById('monthlyCashFlowResult').querySelector('span');
             const amortizationTableBody = document.getElementById('amortizationTableBody');
-            
-            // Clear previous results
             summarySection.style.display = 'none';
             graphSection.style.display = 'none';
-            amortizationSection.style.display = 'none';
+            amortizationSection.style.display = 'none'; 
             singleMonthQuerySection.style.display = 'none';
+            if (toggleFullScheduleBtn.parentNode !== bottomButtonContainer) {
+                bottomButtonContainer.appendChild(toggleFullScheduleBtn);
+            }
+            toggleFullScheduleBtn.textContent = 'Show Amortization & Profit Schedule';
+            toggleFullScheduleBtn.style.display = 'none'; 
             document.getElementById('singleMonthTable').style.display = 'none';
             document.getElementById('singleMonthTableBody').innerHTML = '';
             document.getElementById('singleMonthErrorMessage').style.display = 'none';
-
             amortizationTableBody.innerHTML = '';
-
-            // --- Calculations ---
             const costToCoverByLoanOrOther = purchasePrice + downPayment;
             const upfrontCash = loanAmount - costToCoverByLoanOrOther;
-            
             const monthlyLoanPayment = calculateMonthlyPayment(loanAmount, annualInterestRate, loanTermMonths);
-            
             if (monthlyLoanPayment === Infinity || isNaN(monthlyLoanPayment) || (monthlyLoanPayment <= 0 && annualInterestRate > 0 && loanAmount > 0)) {
                  document.getElementById('errorMessage').textContent = 'Could not calculate a valid monthly payment. Check interest rate and term.';
                  document.getElementById('errorMessage').style.display = 'block';
                  return;
             }
-
-            const monthlyNetCashFlow = monthlyRent - monthlyLoanPayment;
-
-            // --- Display Summary ---
+            const totalOtherMonthlyExpenses = monthlyInsurance + monthlyPropertyTax + monthlyOperatingExpenses;
+            const monthlyNetCashFlow = monthlyRent - monthlyLoanPayment - totalOtherMonthlyExpenses;
             upfrontCashResultEl.textContent = formatCurrency(upfrontCash);
             document.getElementById('upfrontCashResult').className = 'summary-item ' + (upfrontCash >= 0 ? 'profit' : 'loss');
-            
             calculatedMonthlyPaymentResultEl.textContent = formatCurrency(monthlyLoanPayment);
-
             monthlyCashFlowResultEl.textContent = formatCurrency(monthlyNetCashFlow);
-            const monthlyCashFlowEl = document.getElementById('monthlyCashFlowResult');
-            monthlyCashFlowEl.className = 'summary-item ' + (monthlyNetCashFlow >= 0 ? 'profit' : 'loss');
-
+            document.getElementById('monthlyCashFlowResult').className = 'summary-item ' + (monthlyNetCashFlow >= 0 ? 'profit' : 'loss');
             summarySection.style.display = 'block';
-
-            // --- Data for Amortization & Graph ---
             let remainingBalance = loanAmount; 
             let cumulativeProfit = upfrontCash;
-
             const chartLabels = [0]; 
             const chartProfitData = [cumulativeProfit]; 
             const chartBalanceData = [remainingBalance]; 
-
             let initialRow = amortizationTableBody.insertRow();
             initialRow.insertCell().textContent = "Start";
-            initialRow.insertCell().textContent = "-"; 
-            initialRow.insertCell().textContent = "-"; 
-            initialRow.insertCell().textContent = "-"; 
-            initialRow.insertCell().textContent = "-"; 
+            initialRow.insertCell().textContent = "-"; initialRow.insertCell().textContent = "-"; 
+            initialRow.insertCell().textContent = "-"; initialRow.insertCell().textContent = "-"; 
             initialRow.insertCell().textContent = "-"; 
             initialRow.insertCell().textContent = formatCurrency(remainingBalance); 
             initialRow.insertCell().textContent = formatCurrency(cumulativeProfit); 
             initialRow.style.fontWeight = 'bold';
             initialRow.style.backgroundColor = '#e9ecef';
-
-            fullAmortizationData.push({
-                month: "Start", rentIncome: "-", loanPayment: "-", principalPaid: "-",
-                interestPaid: "-", monthlyCashFlow: "-", loanBalance: remainingBalance, 
-                cumulativeProfit: cumulativeProfit 
-            });
-
+            fullAmortizationData.push({month: "Start", rentIncome: "-", loanPayment: "-", principalPaid: "-", interestPaid: "-", monthlyCashFlow: "-", loanBalance: remainingBalance, cumulativeProfit: cumulativeProfit });
             for (let month = 1; month <= loanTermMonths; month++) {
                 const interestForMonth = remainingBalance * (annualInterestRate / 100 / 12);
                 let principalForMonth = monthlyLoanPayment - interestForMonth;
                 let actualPaymentThisMonth = monthlyLoanPayment;
-
                 if (remainingBalance <= 0.005) { 
                     principalForMonth = 0; interestForMonth = 0; actualPaymentThisMonth = 0; 
                     if(remainingBalance < 0) remainingBalance = 0; 
@@ -391,13 +731,10 @@
                     principalForMonth = remainingBalance; 
                     actualPaymentThisMonth = interestForMonth + principalForMonth;
                 }
-                
                 remainingBalance -= principalForMonth;
                 if (remainingBalance < 0.005 && remainingBalance > -0.005) remainingBalance = 0;
-
-                const cashFlowThisMonth = monthlyRent - actualPaymentThisMonth;
+                const cashFlowThisMonth = monthlyRent - actualPaymentThisMonth - totalOtherMonthlyExpenses;
                 cumulativeProfit += cashFlowThisMonth;
-
                 let row = amortizationTableBody.insertRow();
                 row.insertCell().textContent = month;
                 row.insertCell().textContent = formatCurrency(monthlyRent);
@@ -409,33 +746,32 @@
                 row.insertCell().textContent = formatCurrency(remainingBalance);
                 row.insertCell().textContent = formatCurrency(cumulativeProfit);
                 row.cells[7].style.color = cumulativeProfit >= 0 ? 'green' : 'red';
-
-                fullAmortizationData.push({
-                    month: month, rentIncome: monthlyRent, loanPayment: actualPaymentThisMonth,
-                    principalPaid: principalForMonth, interestPaid: interestForMonth,
-                    monthlyCashFlow: cashFlowThisMonth, loanBalance: remainingBalance,
-                    cumulativeProfit: cumulativeProfit
-                });
-                
-                chartLabels.push(month);
-                chartProfitData.push(cumulativeProfit);
-                chartBalanceData.push(remainingBalance);
-
+                fullAmortizationData.push({ month: month, rentIncome: monthlyRent, loanPayment: actualPaymentThisMonth, principalPaid: principalForMonth, interestPaid: interestForMonth, monthlyCashFlow: cashFlowThisMonth, loanBalance: remainingBalance, cumulativeProfit: cumulativeProfit });
+                chartLabels.push(month); chartProfitData.push(cumulativeProfit); chartBalanceData.push(remainingBalance);
                 if (remainingBalance <= 0 && principalForMonth > 0 && month < loanTermMonths) { 
                     for (let m_pad = month + 1; m_pad <= loanTermMonths; m_pad++) {
-                        chartLabels.push(m_pad); chartProfitData.push(cumulativeProfit); 
-                        chartBalanceData.push(0); 
+                        chartLabels.push(m_pad); chartProfitData.push(cumulativeProfit); chartBalanceData.push(0); 
                     }
                     break; 
                 }
             }
-            
-            amortizationSection.style.display = 'block';
+            toggleFullScheduleBtn.style.display = 'block'; 
             singleMonthQuerySection.style.display = 'block';
             document.getElementById('specificMonth').max = loanTermMonths;
-
             renderLoanChart(chartLabels, chartProfitData, chartBalanceData);
             graphSection.style.display = 'block';
+        }
+        
+        function toggleFullScheduleDisplay() {
+            if (amortizationSection.style.display === 'none' || !amortizationSection.style.display) {
+                amortizationHeaderControls.insertBefore(toggleFullScheduleBtn, csvFilenameInput); 
+                amortizationSection.style.display = 'block';
+                toggleFullScheduleBtn.textContent = 'Hide Amortization & Profit Schedule';
+            } else {
+                bottomButtonContainer.appendChild(toggleFullScheduleBtn);
+                amortizationSection.style.display = 'none';
+                toggleFullScheduleBtn.textContent = 'Show Amortization & Profit Schedule';
+            }
         }
 
         function renderLoanChart(labels, profitData, balanceData) {
@@ -445,21 +781,13 @@
                 type: 'line',
                 data: {
                     labels: labels,
-                    datasets: [
-                        { label: 'Cumulative Profit', data: profitData, borderColor: 'rgb(75, 192, 192)', backgroundColor: 'rgba(75, 192, 192, 0.2)', tension: 0.1, yAxisID: 'yProfit' },
-                        { label: 'Loan Principal Balance', data: balanceData, borderColor: 'rgb(255, 99, 132)', backgroundColor: 'rgba(255, 99, 132, 0.2)', tension: 0.1, yAxisID: 'yBalance' }
-                    ]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false, 
-                    interaction: { mode: 'index', intersect: false, },
-                    scales: {
-                        x: { title: { display: true, text: 'Month' } },
-                        yProfit: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Cumulative Profit ($)' }, grid: { drawOnChartArea: false, }, },
-                        yBalance: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Loan Balance ($)' }, grid: { drawOnChartArea: true, } }
-                    },
-                    plugins: { tooltip: { callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); } return label; } } } }
-                }
+                    datasets: [ { label: 'Cumulative Profit', data: profitData, borderColor: 'rgb(75, 192, 192)', backgroundColor: 'rgba(75, 192, 192, 0.2)', tension: 0.1, yAxisID: 'yProfit' },
+                                { label: 'Loan Principal Balance', data: balanceData, borderColor: 'rgb(255, 99, 132)', backgroundColor: 'rgba(255, 99, 132, 0.2)', tension: 0.1, yAxisID: 'yBalance' } ]},
+                options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false, },
+                    scales: { x: { title: { display: true, text: 'Month' } },
+                              yProfit: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Cumulative Profit ($)' }, grid: { drawOnChartArea: false, }, },
+                              yBalance: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Loan Balance ($)' }, grid: { drawOnChartArea: true, } } },
+                    plugins: { tooltip: { callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); } return label; } } } } }
             });
         }
 
@@ -469,21 +797,16 @@
                 document.getElementById('singleMonthTable').style.display = 'none';
                 document.getElementById('singleMonthTableBody').innerHTML = '';
                 document.getElementById('singleMonthErrorMessage').textContent = 'Fix errors in main Property & Loan Details first.';
-                document.getElementById('singleMonthErrorMessage').style.display = 'block';
-                return;
+                document.getElementById('singleMonthErrorMessage').style.display = 'block'; return;
             }
-            const { purchasePrice, downPayment, loanAmount, annualInterestRate, loanTermMonths, monthlyRent } = inputs;
-
+            const { purchasePrice, downPayment, loanAmount, annualInterestRate, loanTermMonths, monthlyRent, monthlyInsurance, monthlyPropertyTax, monthlyOperatingExpenses } = inputs;
             const specificMonthInput = document.getElementById('specificMonth');
             const targetMonth = parseInt(specificMonthInput.value, 10);
-            
             const singleMonthTable = document.getElementById('singleMonthTable');
             const singleMonthTableBody = document.getElementById('singleMonthTableBody');
             const singleMonthErrorEl = document.getElementById('singleMonthErrorMessage');
-
             singleMonthTable.style.display = 'none'; singleMonthTableBody.innerHTML = '';
             singleMonthErrorEl.style.display = 'none'; singleMonthErrorEl.textContent = '';
-
             if (isNaN(targetMonth) || targetMonth <= 0) {
                 singleMonthErrorEl.textContent = 'Please enter a valid positive month number.';
                 singleMonthErrorEl.style.display = 'block'; return;
@@ -492,18 +815,16 @@
                 singleMonthErrorEl.textContent = `Month number cannot exceed loan term (${loanTermMonths} months).`;
                 singleMonthErrorEl.style.display = 'block'; return;
             }
-
             const monthlyLoanPayment = calculateMonthlyPayment(loanAmount, annualInterestRate, loanTermMonths);
             if (monthlyLoanPayment === Infinity || isNaN(monthlyLoanPayment) || (monthlyLoanPayment <= 0 && annualInterestRate > 0 && loanAmount > 0)) {
                  singleMonthErrorEl.textContent = 'Could not calculate a valid monthly payment with current loan details.';
                  singleMonthErrorEl.style.display = 'block'; return;
             }
-            
+            const totalOtherMonthlyExpensesSingle = monthlyInsurance + monthlyPropertyTax + monthlyOperatingExpenses;
             const costToCoverByLoanOrOtherSingle = purchasePrice + downPayment;
             const upfrontCashSingle = loanAmount - costToCoverByLoanOrOtherSingle;
             let currentBalance = loanAmount; 
             let cumulativeProfitAtTargetMonthStart = upfrontCashSingle;
-
             for (let m = 1; m < targetMonth; m++) { 
                 if (currentBalance <= 0.005) break; 
                 const interest = currentBalance * (annualInterestRate / 100 / 12);
@@ -512,9 +833,8 @@
                 if (principal > currentBalance || m === loanTermMonths) { principal = currentBalance; payment = interest + principal; }
                 currentBalance -= principal;
                 if (currentBalance < 0.005 && currentBalance > -0.005) currentBalance = 0;
-                cumulativeProfitAtTargetMonthStart += (monthlyRent - payment);
+                cumulativeProfitAtTargetMonthStart += (monthlyRent - payment - totalOtherMonthlyExpensesSingle);
             }
-            
             if (currentBalance <= 0.005 && targetMonth > 1) {
                  let paidOffEarlyMessage = false; let tempBalanceCheck = loanAmount;
                  for(let k=1; k < targetMonth; k++){ 
@@ -530,21 +850,17 @@
                     singleMonthErrorEl.style.display = 'block'; 
                  }
             }
-
             const interestForTargetMonth = (currentBalance > 0) ? currentBalance * (annualInterestRate / 100 / 12) : 0;
             let principalForTargetMonth = (currentBalance > 0) ? monthlyLoanPayment - interestForTargetMonth : 0;
             let actualPaymentTargetMonth = (currentBalance > 0) ? monthlyLoanPayment : 0;
-
             if (currentBalance <= 0.005) { 
                  principalForTargetMonth = 0; interestForTargetMonth = 0; actualPaymentTargetMonth = 0;
             } else if (principalForTargetMonth > currentBalance || targetMonth === loanTermMonths) { 
                 principalForTargetMonth = currentBalance; actualPaymentTargetMonth = interestForTargetMonth + principalForTargetMonth;
             }
-
             const balanceAfterTargetMonth = Math.max(0, currentBalance - principalForTargetMonth);
-            const cashFlowTargetMonth = monthlyRent - actualPaymentTargetMonth;
+            const cashFlowTargetMonth = monthlyRent - actualPaymentTargetMonth - totalOtherMonthlyExpensesSingle;
             const cumulativeProfitAfterTargetMonth = cumulativeProfitAtTargetMonthStart + cashFlowTargetMonth;
-
             let row = singleMonthTableBody.insertRow();
             row.insertCell().textContent = targetMonth;
             row.insertCell().textContent = formatCurrency(monthlyRent);
@@ -556,80 +872,46 @@
             row.insertCell().textContent = formatCurrency(balanceAfterTargetMonth);
             row.insertCell().textContent = formatCurrency(cumulativeProfitAfterTargetMonth);
             row.cells[7].style.color = cumulativeProfitAfterTargetMonth >= 0 ? 'green' : 'red';
-            
             singleMonthTable.style.display = 'table';
         }
 
         function exportScheduleToCSV() {
-            console.log("Export function called.");
             if (!fullAmortizationData || fullAmortizationData.length === 0) {
                 alert("Please calculate the schedule first by clicking 'Calculate & Generate Full Schedule'.");
-                console.log("No data to export.");
                 return;
             }
-            console.log("Data found, proceeding with CSV generation.");
-
-            const headers = [
-                "Month", "Rent Income", "Loan Payment", "Principal Paid",
-                "Interest Paid", "Monthly Cash Flow", "Loan Balance", "Cumulative Profit"
-            ];
-            
-            // Add BOM for better Excel UTF-8 compatibility, though not strictly necessary for the blank page issue.
+            let userFilename = csvFilenameInput.value.trim();
+            let filename = "amortization_profit_schedule.csv"; 
+            if (userFilename) {
+                let sanitizedFilename = userFilename.replace(/[\\/:*?"<>|]/g, '');
+                sanitizedFilename = sanitizedFilename.replace(/\s+/g, ' ').replace(/ /g, '_');
+                if (!sanitizedFilename.toLowerCase().endsWith('.csv')) {
+                    sanitizedFilename += ".csv";
+                }
+                if (sanitizedFilename && sanitizedFilename.replace(/\.csv$/i, '').length > 0) {
+                    filename = sanitizedFilename;
+                }
+            }
+            const headers = [ "Month", "Rent Income", "Loan Payment", "Principal Paid", "Interest Paid", "Monthly Cash Flow", "Loan Balance", "Cumulative Profit" ];
             let csvContent = "\uFEFF" + headers.join(",") + "\n";
-
             fullAmortizationData.forEach(row => {
-                const csvRow = [
-                    row.month,
-                    (typeof row.rentIncome === 'number' ? row.rentIncome.toFixed(2) : row.rentIncome),
-                    (typeof row.loanPayment === 'number' ? row.loanPayment.toFixed(2) : row.loanPayment),
-                    (typeof row.principalPaid === 'number' ? row.principalPaid.toFixed(2) : row.principalPaid),
-                    (typeof row.interestPaid === 'number' ? row.interestPaid.toFixed(2) : row.interestPaid),
-                    (typeof row.monthlyCashFlow === 'number' ? row.monthlyCashFlow.toFixed(2) : row.monthlyCashFlow),
-                    (typeof row.loanBalance === 'number' ? row.loanBalance.toFixed(2) : row.loanBalance),
-                    (typeof row.cumulativeProfit === 'number' ? row.cumulativeProfit.toFixed(2) : row.cumulativeProfit)
-                ];
+                const csvRow = [ row.month, (typeof row.rentIncome === 'number' ? row.rentIncome.toFixed(2) : row.rentIncome), (typeof row.loanPayment === 'number' ? row.loanPayment.toFixed(2) : row.loanPayment), (typeof row.principalPaid === 'number' ? row.principalPaid.toFixed(2) : row.principalPaid), (typeof row.interestPaid === 'number' ? row.interestPaid.toFixed(2) : row.interestPaid), (typeof row.monthlyCashFlow === 'number' ? row.monthlyCashFlow.toFixed(2) : row.monthlyCashFlow), (typeof row.loanBalance === 'number' ? row.loanBalance.toFixed(2) : row.loanBalance), (typeof row.cumulativeProfit === 'number' ? row.cumulativeProfit.toFixed(2) : row.cumulativeProfit) ];
                 csvContent += csvRow.join(",") + "\n";
             });
-
-            // console.log("CSV Content (first 500 chars):\n", csvContent.substring(0, 500)); 
-
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
-
-            if (link.download !== undefined) { // Check for download attribute support
+            if (link.download !== undefined) { 
                 const url = URL.createObjectURL(blob);
-                console.log("Blob URL created:", url); 
-
                 link.setAttribute("href", url);
-                link.setAttribute("download", "amortization_profit_schedule.csv");
-                link.style.display = 'none'; // Changed from visibility:hidden, though both should work
+                link.setAttribute("download", filename);
+                link.style.display = 'none'; 
                 document.body.appendChild(link);
-                
-                console.log("Attempting to click link...");
-                try {
-                    link.click();
-                    console.log("Link clicked successfully.");
-                } catch (e) {
-                    console.error("Error clicking link:", e);
-                    alert("Could not initiate download due to an error. Check console.");
-                }
-                
-                // Delay cleanup to ensure download initiation has time to complete
-                setTimeout(() => {
-                    console.log("Cleaning up: removing link and revoking URL.");
-                    if (document.body.contains(link)) {
-                        document.body.removeChild(link);
-                    }
-                    URL.revokeObjectURL(url);
-                    console.log("Cleanup complete.");
-                }, 150); // Slightly increased delay
-
+                try { link.click(); } catch (e) { console.error("Error clicking link:", e); alert("Could not initiate download due to an error. Check console."); }
+                setTimeout(() => { if (document.body.contains(link)) { document.body.removeChild(link); } URL.revokeObjectURL(url); }, 150); 
             } else {
-                console.log("Download attribute not supported by this browser.");
                 alert("CSV export is not fully supported in this browser.");
             }
         }
-
     </script>
 
 </body>
