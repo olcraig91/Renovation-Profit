@@ -174,19 +174,17 @@
         }
         
         #theme-toggle-btn {
-            position: absolute;
-            top: 25px;
-            right: 30px;
-            padding: 8px 12px;
+            padding: 10px 15px;
             background-color: var(--section-bg);
             color: var(--text-color);
             border: 1px solid var(--border-color);
             border-radius: 5px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 16px;
             transition: background-color 0.3s ease, color 0.3s ease;
-            width: auto;
+            width: 220px;
             margin: 0;
+            box-sizing: border-box;
         }
 
         #theme-toggle-btn:hover {
@@ -297,6 +295,7 @@
             background-color: var(--table-header-bg);
             color: var(--table-header-text);
             font-weight: bold;
+            text-align: center;
         }
 
         #amortizationTable tbody tr:nth-child(even),
@@ -328,28 +327,34 @@
             max-height: 400px;
         }
 
+        .top-controls-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
         .preset-menu-container {
             position: relative; 
-            margin-bottom: 20px;
             text-align: left; 
         }
 
         #loadPresetBtn {
-            display: flex; 
-            justify-content: center; /* Changed */
+            display: flex;
+            justify-content: center;
             align-items: center;
-            width: auto; 
-            min-width: 250px; 
-            padding: 10px 15px; 
-            background-color: var(--preset-btn-bg); 
-            color: var(--preset-btn-text); 
-            border: 1px solid var(--preset-btn-border); 
+            width: 220px;
+            padding: 10px 15px;
+            background-color: var(--preset-btn-bg);
+            color: var(--preset-btn-text);
+            border: 1px solid var(--preset-btn-border);
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
             transition: background-color 0.3s ease, border-color 0.3s ease;
-            margin-top: 0; 
-            margin-bottom: 10px; 
+            margin-top: 0;
+            margin-bottom: 0;
+            box-sizing: border-box;
         }
         #loadPresetBtn:hover {
             background-color: var(--preset-btn-hover-bg); 
@@ -409,17 +414,18 @@
 
     <div class="container">
         <h1>Property Investment Calculator</h1>
-        <button id="theme-toggle-btn" title="Toggle light/dark mode">🌙 Dark Mode</button>
 
-
-        <div class="preset-menu-container">
-            <button type="button" id="loadPresetBtn">
-                <span id="loadPresetBtnLabel">Autofill Options</span>
-                <span class="dropdown-caret">▼</span>
-            </button>
-            <div id="presetOptions" class="preset-options-dropdown">
-                <!-- Preset options will be populated by JavaScript -->
+        <div class="top-controls-container">
+            <div class="preset-menu-container">
+                <button type="button" id="loadPresetBtn">
+                    <span id="loadPresetBtnLabel">Autofill Options</span>
+                    <span class="dropdown-caret">▼</span>
+                </button>
+                <div id="presetOptions" class="preset-options-dropdown">
+                    <!-- Preset options will be populated by JavaScript -->
+                </div>
             </div>
+            <button id="theme-toggle-btn" title="Toggle light/dark mode">🌙 Dark Mode</button>
         </div>
 
         <div class="input-section">
