@@ -117,6 +117,19 @@
             background-color: var(--section-bg);
         }
 
+        .input-section h3 {
+            text-align: left;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 1.2em;
+        }
+
+        .input-section h3:first-of-type {
+            margin-top: 0;
+        }
+
         .form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -429,7 +442,8 @@
         </div>
 
         <div class="input-section">
-            <h3>Property, Loan & Expense Details</h3>
+            <!-- Group 1: Purchase & Loan Details -->
+            <h3>Purchase & Loan Details</h3>
             <div class="form-grid">
                 <div class="form-group">
                     <label for="purchasePrice">Original Purchase Price ($):</label>
@@ -451,10 +465,24 @@
                     <label for="loanTermMonths">Loan Term (Months):</label>
                     <input type="number" id="loanTermMonths" placeholder="e.g., 360" step="1" min="1">
                 </div>
+            </div>
+
+            <!-- Group 2: Monthly Income & Expenses -->
+            <h3>Monthly Income & Expenses</h3>
+            <div class="form-grid">
                 <div class="form-group">
                     <label for="monthlyRent">Monthly Rent Income ($):</label>
                     <input type="number" id="monthlyRent" placeholder="e.g., 1500" step="any">
                 </div>
+                <div class="form-group">
+                    <label for="monthlyOperatingExpenses">Monthly Operating Expenses ($):</label>
+                    <input type="number" id="monthlyOperatingExpenses" placeholder="e.g., 150" step="any" value="0">
+                </div>
+            </div>
+
+            <!-- Group 3: Annual Expenses -->
+            <h3>Annual Expenses</h3>
+            <div class="form-grid">
                 <div class="form-group">
                     <label for="annualInsurance">Annual Insurance ($):</label>
                     <input type="number" id="annualInsurance" placeholder="e.g., 1200" step="any" value="0">
@@ -463,11 +491,8 @@
                     <label for="annualPropertyTax">Annual Property Tax ($):</label>
                     <input type="number" id="annualPropertyTax" placeholder="e.g., 2400" step="any" value="0">
                 </div>
-                <div class="form-group">
-                    <label for="monthlyOperatingExpenses">Monthly Operating Expenses ($):</label>
-                    <input type="number" id="monthlyOperatingExpenses" placeholder="e.g., 150" step="any" value="0">
-                </div>
             </div>
+            
             <button type="button" onclick="calculateAndDisplay()">Calculate & Generate Full Schedule</button>
             <p id="errorMessage" class="error" style="display: none;"></p>
         </div>
